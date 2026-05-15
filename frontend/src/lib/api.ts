@@ -1,0 +1,36 @@
+import axios, { AxiosError, type AxiosInstance } from 'axios';
+
+export const api: AxiosInstance = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true,
+  withXSRFToken: true,
+  headers: {
+    Accept: 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+  },
+});
+
+api.interceptors.response.use(
+  (res) => res,
+  async (err: AxiosError) => {
+    const status = err.response?.status;
+
+    if (status === 401 && typeof window !== 'undefined') {
+      document.cookie = 'app_authed=; path=/; max-age=0';
+      const isAuthPage = window.location.pathname.startsWith('/login');
+      if (!isAuthPage) {
+        window.location.href = '/login';
+      }
+    }
+
+    if (status === 419) {
+      await api.get('/sanctum/csrf-cookie');
+    }
+
+    return Promise.reject(err);
+  }
+);
+
+export async function ensureCsrfCookie(): Promise<void> {
+  await api.get('/sanctum/csrf-cookie');
+}
