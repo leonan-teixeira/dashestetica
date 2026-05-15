@@ -1,0 +1,32 @@
+# Pastas privadas
+.claude/
+.planning/
+
+# Ambiente
+.env
+.env.*
+
+# Logs
+*.log
+
+# Dependências Backend
+backend/vendor/
+
+# Dependências Frontend
+frontend/node_modules/
+
+# Build Next.js
+frontend/.next/
+
+# Cache
+backend/storage/*.key
+backend/bootstrap/cache/*
+frontend/.turbo/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
