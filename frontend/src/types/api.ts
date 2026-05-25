@@ -94,6 +94,45 @@ export interface RelatorioEstoque {
   itens: RelatorioEstoqueItem[];
 }
 
+export interface FinanceiroResumo {
+  periodo: { inicio: string; fim: string };
+  faturado: number;
+  recebido: number;
+  pendente_periodo: number;
+  variacao_mes: number | null;
+  total_pendente_geral: number;
+  qtd_pendente_geral: number;
+  por_forma: { forma: string; total: number; qtd: number }[];
+  por_dia: { dia: string; total: number; recebido: number }[];
+}
+
+export interface ExtratoItem {
+  id: number;
+  paciente_id: number;
+  paciente: string | null;
+  data: string;
+  valor_total: number;
+  forma_pagamento: string | null;
+  pago: boolean;
+  observacoes: string | null;
+}
+
+export interface ExtratoMeta {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+  soma_filtro: number;
+  soma_recebido: number;
+}
+
+export interface FaturamentoMensal {
+  mes: string;
+  total: number;
+  recebido: number;
+  consultas: number;
+}
+
 export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;

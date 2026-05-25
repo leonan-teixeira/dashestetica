@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\AgendaController;
 use App\Http\Controllers\Api\AuditController;
 use App\Http\Controllers\Api\GraficoController;
 use App\Http\Controllers\Api\EstoqueController;
+use App\Http\Controllers\Api\FinanceiroController;
 use App\Http\Controllers\Api\NotificacaoController;
 use App\Http\Controllers\Admin\ClinicaController;
 use App\Http\Middleware\CheckSubscription;
@@ -85,6 +86,13 @@ Route::middleware(['auth:sanctum', 'throttle:api', SetTenant::class, CheckSubscr
     // Agenda
     Route::get('/agenda/horarios-disponiveis', [AgendaController::class, 'horariosDisponiveis']);
     Route::get('/cep/{cep}', [AgendaController::class, 'cep']);
+
+    // Financeiro
+    Route::get('/financeiro/resumo', [FinanceiroController::class, 'resumo']);
+    Route::get('/financeiro/extrato', [FinanceiroController::class, 'extrato']);
+    Route::get('/financeiro/faturamento-mensal', [FinanceiroController::class, 'faturamentoMensal']);
+    Route::patch('/financeiro/consultas/{id}/pago', [FinanceiroController::class, 'marcarPago']);
+    Route::get('/financeiro/exportar-csv', [FinanceiroController::class, 'exportarCsv']);
 
     // Estoque
     Route::get('/estoque/produtos', [EstoqueController::class, 'indexProdutos']);

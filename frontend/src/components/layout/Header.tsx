@@ -11,6 +11,7 @@ const titles: Record<string, { title: string; subtitle: string }> = {
   '/agenda':        { title: 'Agenda',        subtitle: 'Próximas consultas e horários' },
   '/procedimentos': { title: 'Procedimentos', subtitle: 'Catálogo de serviços oferecidos' },
   '/consultas':     { title: 'Consultas',     subtitle: 'Histórico e filtros de atendimentos' },
+  '/financeiro':     { title: 'Financeiro',     subtitle: 'Faturamento, recebimentos e contas a receber' },
   '/estoque':        { title: 'Estoque',        subtitle: 'Controle de produtos e movimentações' },
   '/configuracoes': { title: 'Configurações', subtitle: 'Conta, segurança e integrações' },
 };

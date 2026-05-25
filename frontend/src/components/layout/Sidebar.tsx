@@ -11,6 +11,7 @@ import {
   LogOut,
   Stethoscope,
   Package,
+  Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout } from '@/lib/auth';
@@ -23,6 +24,7 @@ const navItems = [
   { href: '/agenda', label: 'Agenda', icon: CalendarDays },
   { href: '/consultas', label: 'Consultas', icon: Stethoscope },
   { href: '/procedimentos', label: 'Procedimentos', icon: Scissors },
+  { href: '/financeiro', label: 'Financeiro', icon: Wallet },
   { href: '/estoque', label: 'Estoque', icon: Package },
   { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ];
