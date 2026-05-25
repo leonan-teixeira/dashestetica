@@ -62,7 +62,7 @@ export function PacienteForm({
 
     setCepLoading(true);
     try {
-      const { data } = await api.get(`/api/cep/${cep}`);
+      const { data } = await api.get(`/cep/${cep}`);
       const d = data.data;
       setValue('endereco.rua', d.rua ?? '');
       setValue('endereco.bairro', d.bairro ?? '');

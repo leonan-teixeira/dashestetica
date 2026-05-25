@@ -64,7 +64,7 @@ export default function ConsultaDetalhePage({ params }: { params: Promise<{ id: 
     if (!evolucao.trim()) return;
     setSavingEvolucao(true);
     try {
-      await api.patch(`/api/consultas/${consultaId}/evolucao`, { evolucao_clinica: evolucao });
+      await api.patch(`/consultas/${consultaId}/evolucao`, { evolucao_clinica: evolucao });
       toast.success('Evolução salva!');
       setEvolucao('');
     } catch {

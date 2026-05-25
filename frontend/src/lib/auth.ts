@@ -16,7 +16,7 @@ function setAdminCookie() {
 
 export async function login(email: string, password: string): Promise<User> {
   await ensureCsrfCookie();
-  const { data } = await api.post('/api/login', { email, password });
+  const { data } = await api.post('/login', { email, password });
   const user: User = data.data;
   setAuthedCookie();
   if (user.is_super_admin) {
@@ -26,13 +26,13 @@ export async function login(email: string, password: string): Promise<User> {
 }
 
 export async function logout(): Promise<void> {
-  await api.post('/api/logout');
+  await api.post('/logout');
   clearAuthedCookie();
 }
 
 export async function me(): Promise<User | null> {
   try {
-    const { data } = await api.get('/api/me');
+    const { data } = await api.get('/me');
     return data.data;
   } catch {
     // Interceptor em api.ts já limpa o cookie e redireciona no 401

@@ -35,13 +35,13 @@ export default function ProcedimentosPage() {
   const { data: procedimentos, isLoading } = useQuery({
     queryKey: ['procedimentos'],
     queryFn: async () => {
-      const { data } = await api.get<{ data: Procedimento[] }>('/api/procedimentos');
+      const { data } = await api.get<{ data: Procedimento[] }>('/procedimentos');
       return data.data;
     },
   });
 
   const criar = useMutation({
-    mutationFn: (d: FormData) => api.post('/api/procedimentos', d),
+    mutationFn: (d: FormData) => api.post('/procedimentos', d),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['procedimentos'] });
       toast.success('Procedimento criado!');
@@ -52,7 +52,7 @@ export default function ProcedimentosPage() {
 
   const atualizar = useMutation({
     mutationFn: ({ id, ...d }: FormData & { id: number }) =>
-      api.put(`/api/procedimentos/${id}`, d),
+      api.put(`/procedimentos/${id}`, d),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['procedimentos'] });
       toast.success('Salvo!');
@@ -62,7 +62,7 @@ export default function ProcedimentosPage() {
   });
 
   const deletar = useMutation({
-    mutationFn: (id: number) => api.delete(`/api/procedimentos/${id}`),
+    mutationFn: (id: number) => api.delete(`/procedimentos/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['procedimentos'] });
       toast.success('Removido.');

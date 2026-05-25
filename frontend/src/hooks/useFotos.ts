@@ -9,7 +9,7 @@ export function useFotosPaciente(pacienteId: number) {
     queryKey: ['fotos', 'paciente', pacienteId],
     queryFn: async () => {
       const { data } = await api.get<{ data: FotoEvolucao[] }>(
-        `/api/pacientes/${pacienteId}/fotos`
+        `/pacientes/${pacienteId}/fotos`
       );
       return data.data;
     },
@@ -22,7 +22,7 @@ export function useComparativo(consultaId: number) {
     queryKey: ['fotos', 'comparativo', consultaId],
     queryFn: async () => {
       const { data } = await api.get<{ data: { antes: FotoEvolucao[]; depois: FotoEvolucao[] } }>(
-        `/api/consultas/${consultaId}/comparativo`
+        `/consultas/${consultaId}/comparativo`
       );
       return data.data;
     },
@@ -39,7 +39,7 @@ export function useUploadFoto(consultaId: number) {
       form.append('tipo', tipo);
       if (observacao) form.append('observacao', observacao);
       const { data } = await api.post<{ data: FotoEvolucao }>(
-        `/api/consultas/${consultaId}/fotos`,
+        `/consultas/${consultaId}/fotos`,
         form,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
@@ -57,7 +57,7 @@ export function useDeletarFoto() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
-      await api.delete(`/api/fotos/${id}`);
+      await api.delete(`/fotos/${id}`);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['fotos'] });

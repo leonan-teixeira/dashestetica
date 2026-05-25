@@ -61,7 +61,7 @@ export default function ConfiguracoesPage() {
     }
     setSavingPwd(true);
     try {
-      await api.put('/api/me/senha', {
+      await api.put('/me/senha', {
         current_password: senhaAtual,
         password: novaSenha,
         password_confirmation: confirmar,

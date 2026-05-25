@@ -25,7 +25,7 @@ export function useLembretes(params: { status?: LembreteStatus; paciente_id?: nu
   return useQuery({
     queryKey: ['lembretes', params],
     queryFn: async () => {
-      const { data } = await api.get<PaginatedResponse<Lembrete>>('/api/lembretes', { params });
+      const { data } = await api.get<PaginatedResponse<Lembrete>>('/lembretes', { params });
       return data;
     },
   });
@@ -36,7 +36,7 @@ export function useWhatsappStatus() {
     queryKey: ['whatsapp-status'],
     queryFn: async () => {
       const { data } = await api.get<{ data: { configurado: boolean; instance: string | null } }>(
-        '/api/lembretes/whatsapp/status'
+        '/lembretes/whatsapp/status'
       );
       return data.data;
     },
@@ -48,7 +48,7 @@ export function useReenviarLembrete() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
-      const { data } = await api.post<{ data: Lembrete }>(`/api/lembretes/${id}/reenviar`);
+      const { data } = await api.post<{ data: Lembrete }>(`/lembretes/${id}/reenviar`);
       return data.data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['lembretes'] }),
@@ -58,7 +58,7 @@ export function useReenviarLembrete() {
 export function useCancelarLembrete() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.delete(`/api/lembretes/${id}`),
+    mutationFn: (id: number) => api.delete(`/lembretes/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['lembretes'] }),
   });
 }

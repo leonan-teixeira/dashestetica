@@ -6,12 +6,12 @@ export async function listClinicas(params?: {
   ativo?: boolean;
   page?: number;
 }): Promise<PaginatedResponse<Clinica>> {
-  const { data } = await api.get('/api/admin/clinicas', { params });
+  const { data } = await api.get('/admin/clinicas', { params });
   return data;
 }
 
 export async function getClinica(id: number): Promise<Clinica> {
-  const { data } = await api.get(`/api/admin/clinicas/${id}`);
+  const { data } = await api.get(`/admin/clinicas/${id}`);
   return data.data;
 }
 
@@ -26,7 +26,7 @@ export async function createClinica(payload: {
   usuario_nome: string;
   usuario_senha: string;
 }): Promise<Clinica> {
-  const { data } = await api.post('/api/admin/clinicas', payload);
+  const { data } = await api.post('/admin/clinicas', payload);
   return data.data;
 }
 
@@ -43,15 +43,15 @@ export async function updateClinica(
     ativo: boolean;
   }>
 ): Promise<Clinica> {
-  const { data } = await api.put(`/api/admin/clinicas/${id}`, payload);
+  const { data } = await api.put(`/admin/clinicas/${id}`, payload);
   return data.data;
 }
 
 export async function desativarClinica(id: number): Promise<void> {
-  await api.delete(`/api/admin/clinicas/${id}`);
+  await api.delete(`/admin/clinicas/${id}`);
 }
 
 export async function reativarClinica(id: number): Promise<Clinica> {
-  const { data } = await api.patch(`/api/admin/clinicas/${id}/reativar`);
+  const { data } = await api.patch(`/admin/clinicas/${id}/reativar`);
   return data.data;
 }

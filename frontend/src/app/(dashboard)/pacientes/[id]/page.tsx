@@ -91,7 +91,7 @@ export default function PacienteDetalhePage({ params }: { params: Promise<{ id: 
   const { data: audits, isLoading: auditLoading } = useQuery({
     queryKey: ['audits-paciente', pacienteId],
     queryFn: async () => {
-      const { data } = await api.get<{ data: AuditEntry[] }>(`/api/pacientes/${pacienteId}/audits`);
+      const { data } = await api.get<{ data: AuditEntry[] }>(`/pacientes/${pacienteId}/audits`);
       return data.data;
     },
     enabled: auditOpen,
@@ -100,7 +100,7 @@ export default function PacienteDetalhePage({ params }: { params: Promise<{ id: 
   async function baixarPdf() {
     setDownloading(true);
     try {
-      const res = await api.get(`/api/pacientes/${pacienteId}/pdf`, { responseType: 'blob' });
+      const res = await api.get(`/pacientes/${pacienteId}/pdf`, { responseType: 'blob' });
       const blob = new Blob([res.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
