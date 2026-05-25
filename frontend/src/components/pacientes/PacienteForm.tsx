@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, ShieldCheck } from 'lucide-react';
+import { Loader2, ShieldCheck, MapPin } from 'lucide-react';
 import { pacienteSchema, type PacienteFormData } from '@/lib/validations/paciente';
+import { api } from '@/lib/api';
 
 interface Props {
   defaultValues?: Partial<PacienteFormData>;
@@ -41,17 +43,41 @@ export function PacienteForm({
   submitLabel = 'Salvar',
   editMode,
 }: Props) {
+  const [cepLoading, setCepLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<PacienteFormData>({
     resolver: zodResolver(pacienteSchema),
     defaultValues,
   });
 
+  async function buscarCep() {
+    const cep = watch('endereco.cep')?.replace(/\D/g, '');
+    if (!cep || cep.length !== 8) return;
+
+    setCepLoading(true);
+    try {
+      const { data } = await api.get(`/api/cep/${cep}`);
+      const d = data.data;
+      setValue('endereco.rua', d.rua ?? '');
+      setValue('endereco.bairro', d.bairro ?? '');
+      setValue('endereco.cidade', d.cidade ?? '');
+      setValue('endereco.uf', d.uf ?? '');
+    } catch {
+      // CEP não encontrado — mantém campos como estão
+    } finally {
+      setCepLoading(false);
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Dados pessoais */}
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Nome completo *" error={errors.nome_completo?.message}>
           <input {...register('nome_completo')} className={inputCls} />
@@ -72,6 +98,62 @@ export function PacienteForm({
         <Field label="Data de nascimento" error={errors.data_nascimento?.message}>
           <input {...register('data_nascimento')} type="date" className={inputCls} />
         </Field>
+      </div>
+
+      {/* Endereço */}
+      <div className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
+        <p className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <MapPin className="h-4 w-4 text-brand-500" />
+          Endereço
+        </p>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-foreground">CEP</label>
+            <div className="flex gap-2">
+              <input
+                {...register('endereco.cep')}
+                placeholder="00000-000"
+                maxLength={9}
+                className={inputCls}
+              />
+              <button
+                type="button"
+                onClick={buscarCep}
+                disabled={cepLoading}
+                className="shrink-0 rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+              >
+                {cepLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Buscar'}
+              </button>
+            </div>
+          </div>
+
+          <div className="sm:col-span-2 space-y-1.5">
+            <label className="block text-sm font-medium text-foreground">Rua / Logradouro</label>
+            <input {...register('endereco.rua')} className={inputCls} />
+          </div>
+
+          <Field label="Número" error={undefined}>
+            <input {...register('endereco.numero')} className={inputCls} />
+          </Field>
+
+          <Field label="Complemento" error={undefined}>
+            <input {...register('endereco.complemento')} placeholder="Apto, bloco..." className={inputCls} />
+          </Field>
+
+          <Field label="Bairro" error={undefined}>
+            <input {...register('endereco.bairro')} className={inputCls} />
+          </Field>
+
+          <div className="sm:col-span-2 space-y-1.5">
+            <label className="block text-sm font-medium text-foreground">Cidade</label>
+            <input {...register('endereco.cidade')} className={inputCls} />
+          </div>
+
+          <Field label="UF" error={undefined}>
+            <input {...register('endereco.uf')} maxLength={2} className={inputCls} />
+          </Field>
+        </div>
       </div>
 
       <Field label="Observações gerais" error={errors.observacoes_gerais?.message}>

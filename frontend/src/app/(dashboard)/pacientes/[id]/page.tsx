@@ -14,13 +14,33 @@ import {
   Images,
   Download,
   Loader2,
+  History,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { usePaciente } from '@/hooks/usePacientes';
 import { useConsultas } from '@/hooks/useConsultas';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+interface AuditEntry {
+  id: number;
+  evento: string;
+  modelo: string;
+  alteracoes: Array<{ campo: string; de: string; para: string }>;
+  usuario: string;
+  data: string;
+}
+
+const eventoStyle: Record<string, string> = {
+  Criado:     'bg-emerald-100 text-emerald-700',
+  Atualizado: 'bg-sky-100 text-sky-700',
+  Excluído:   'bg-rose-100 text-rose-700',
+  Restaurado: 'bg-amber-100 text-amber-700',
+};
 
 const statusLabel: Record<string, { label: string; cls: string }> = {
   agendada:       { label: 'Agendada',       cls: 'bg-amber-100 text-amber-700' },
@@ -66,6 +86,16 @@ export default function PacienteDetalhePage({ params }: { params: Promise<{ id: 
   const { data: paciente, isLoading } = usePaciente(pacienteId);
   const { data: consultas } = useConsultas({ paciente_id: pacienteId });
   const [downloading, setDownloading] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
+
+  const { data: audits, isLoading: auditLoading } = useQuery({
+    queryKey: ['audits-paciente', pacienteId],
+    queryFn: async () => {
+      const { data } = await api.get<{ data: AuditEntry[] }>(`/api/pacientes/${pacienteId}/audits`);
+      return data.data;
+    },
+    enabled: auditOpen,
+  });
 
   async function baixarPdf() {
     setDownloading(true);
@@ -260,6 +290,76 @@ export default function PacienteDetalhePage({ params }: { params: Promise<{ id: 
             })
           )}
         </div>
+      </section>
+
+      {/* Audit log */}
+      <section className="overflow-hidden rounded-2xl border border-border bg-card">
+        <button
+          onClick={() => setAuditOpen((v) => !v)}
+          className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-muted/30"
+        >
+          <div className="flex items-center gap-2">
+            <History className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-foreground">Histórico de alterações</h2>
+          </div>
+          {auditOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        </button>
+
+        {auditOpen && (
+          <div className="border-t border-border">
+            {auditLoading ? (
+              <div className="px-5 py-8 text-center text-sm text-muted-foreground">
+                <Loader2 className="mx-auto mb-2 h-5 w-5 animate-spin" />
+                Carregando...
+              </div>
+            ) : !audits?.length ? (
+              <p className="px-5 py-8 text-center text-sm text-muted-foreground">
+                Nenhum registro de auditoria encontrado.
+              </p>
+            ) : (
+              <div className="divide-y divide-border">
+                {audits.map((entry) => (
+                  <div key={entry.id} className="px-5 py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${eventoStyle[entry.evento] ?? 'bg-muted text-muted-foreground'}`}>
+                          {entry.evento}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{entry.modelo}</span>
+                        <span className="text-xs text-muted-foreground">por <strong className="text-foreground">{entry.usuario}</strong></span>
+                      </div>
+                      <time className="shrink-0 text-[11px] text-muted-foreground">
+                        {format(parseISO(entry.data), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      </time>
+                    </div>
+                    {entry.alteracoes.length > 0 && (
+                      <div className="mt-3 rounded-xl border border-border bg-muted/30 overflow-hidden">
+                        <table className="w-full text-xs">
+                          <thead className="bg-muted/60">
+                            <tr>
+                              <th className="px-3 py-1.5 text-left font-medium text-muted-foreground w-1/4">Campo</th>
+                              <th className="px-3 py-1.5 text-left font-medium text-muted-foreground w-[37.5%]">Antes</th>
+                              <th className="px-3 py-1.5 text-left font-medium text-muted-foreground w-[37.5%]">Depois</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border">
+                            {entry.alteracoes.map((alt, i) => (
+                              <tr key={i}>
+                                <td className="px-3 py-1.5 font-medium text-foreground">{alt.campo}</td>
+                                <td className="px-3 py-1.5 text-muted-foreground line-through">{alt.de}</td>
+                                <td className="px-3 py-1.5 text-foreground">{alt.para}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </section>
     </div>
   );

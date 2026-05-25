@@ -16,7 +16,6 @@ class ProcedimentoController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $procedimentos = Procedimento::query()
-            ->where('user_id', $request->user()->id)
             ->when($request->categoria, fn ($q, $c) => $q->where('categoria', $c))
             ->when($request->has('ativo'), fn ($q) => $q->where('ativo', $request->boolean('ativo')))
             ->orderBy('nome')
@@ -29,7 +28,10 @@ class ProcedimentoController extends Controller
     {
         $procedimento = Procedimento::create(array_merge(
             $request->validated(),
-            ['user_id' => $request->user()->id]
+            [
+                'clinica_id' => $request->user()->clinica_id,
+                'user_id'    => $request->user()->id,
+            ]
         ));
 
         return response()->json(['data' => new ProcedimentoResource($procedimento)], 201);
@@ -37,14 +39,14 @@ class ProcedimentoController extends Controller
 
     public function show(Request $request, Procedimento $procedimento): JsonResponse
     {
-        abort_if($procedimento->user_id !== $request->user()->id, 403);
+        abort_if($procedimento->clinica_id !== $request->user()->clinica_id, 403);
 
         return response()->json(['data' => new ProcedimentoResource($procedimento)]);
     }
 
     public function update(UpdateProcedimentoRequest $request, Procedimento $procedimento): JsonResponse
     {
-        abort_if($procedimento->user_id !== $request->user()->id, 403);
+        abort_if($procedimento->clinica_id !== $request->user()->clinica_id, 403);
 
         $procedimento->update($request->validated());
 
@@ -53,7 +55,7 @@ class ProcedimentoController extends Controller
 
     public function destroy(Request $request, Procedimento $procedimento): JsonResponse
     {
-        abort_if($procedimento->user_id !== $request->user()->id, 403);
+        abort_if($procedimento->clinica_id !== $request->user()->clinica_id, 403);
 
         $procedimento->delete();
 

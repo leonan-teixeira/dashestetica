@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,13 @@ class Consulta extends Model implements Auditable
 {
     use SoftDeletes, \OwenIt\Auditing\Auditable;
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope());
+    }
+
     protected $fillable = [
+        'clinica_id',
         'user_id',
         'paciente_id',
         'inicio',

@@ -18,8 +18,12 @@ class PacienteController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $pacientes = Paciente::query()
-            ->where('user_id', $request->user()->id)
-            ->when($request->search, fn ($q, $s) => $q->whereFullText('nome_completo', $s))
+            ->when($request->search, function ($q, $s) {
+                // FULLTEXT ignora termos < 4 chars — fallback para LIKE
+                strlen($s) >= 4
+                    ? $q->whereFullText('nome_completo', $s)
+                    : $q->where('nome_completo', 'like', "%{$s}%");
+            })
             ->when($request->cpf_hash, fn ($q, $h) => $q->where('cpf_hash', hash('sha256', preg_replace('/\D/', '', $h))))
             ->orderBy('nome_completo')
             ->paginate(20);
@@ -32,6 +36,7 @@ class PacienteController extends Controller
         $paciente = Paciente::create(array_merge(
             $request->validated(),
             [
+                'clinica_id'           => $request->user()->clinica_id,
                 'user_id'              => $request->user()->id,
                 'consentimento_aceito_em' => now(),
                 'consentimento_versao' => $request->consentimento_versao ?? '1.0',
@@ -112,6 +117,6 @@ class PacienteController extends Controller
 
     private function authorizeOwnership(Request $request, Paciente $paciente): void
     {
-        abort_if($paciente->user_id !== $request->user()->id, 403);
+        abort_if($paciente->clinica_id !== $request->user()->clinica_id, 403);
     }
 }

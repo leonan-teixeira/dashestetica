@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,13 @@ class FotoEvolucao extends Model
 
     protected $table = 'fotos_evolucao';
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope());
+    }
+
     protected $fillable = [
+        'clinica_id',
         'paciente_id',
         'consulta_id',
         'tipo',

@@ -9,6 +9,14 @@ use App\Http\Controllers\Api\FotoEvolucaoController;
 use App\Http\Controllers\Api\LembreteController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\AgendaController;
+use App\Http\Controllers\Api\AuditController;
+use App\Http\Controllers\Api\GraficoController;
+use App\Http\Controllers\Api\EstoqueController;
+use App\Http\Controllers\Api\NotificacaoController;
+use App\Http\Controllers\Admin\ClinicaController;
+use App\Http\Middleware\CheckSubscription;
+use App\Http\Middleware\IsAdmin;
+use App\Http\Middleware\SetTenant;
 use Illuminate\Support\Facades\Route;
 
 // Rotas públicas (com throttle específico para login)
@@ -16,8 +24,14 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
+// Rotas admin (super admin only)
+Route::middleware(['auth:sanctum', 'throttle:api', IsAdmin::class])->prefix('admin')->group(function () {
+    Route::apiResource('clinicas', ClinicaController::class);
+    Route::patch('/clinicas/{clinica}/reativar', [ClinicaController::class, 'reativar']);
+});
+
 // Rotas autenticadas
-Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:api', SetTenant::class, CheckSubscription::class])->group(function () {
 
     // Auth
     Route::get('/me', [AuthController::class, 'me']);
@@ -27,6 +41,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     // Pacientes
     Route::apiResource('pacientes', PacienteController::class);
     Route::get('/pacientes/{paciente}/exportar', [PacienteController::class, 'exportar']);
+    Route::get('/pacientes/{paciente}/audits', [AuditController::class, 'porPaciente']);
     Route::get('/pacientes/{paciente}/pdf', [PacienteController::class, 'exportarPdf'])->name('pacientes.pdf');
     Route::get('/pacientes/{paciente}/fotos', [FotoEvolucaoController::class, 'porPaciente']);
 
@@ -62,8 +77,24 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/dashboard/resumo', [DashboardController::class, 'resumo']);
     Route::get('/dashboard/agenda-semana', [DashboardController::class, 'agendaSemana']);
     Route::get('/dashboard/pacientes-retorno', [DashboardController::class, 'pacientesRetorno']);
+    Route::get('/dashboard/graficos', [GraficoController::class, 'index']);
+
+    // Notificações
+    Route::get('/notificacoes', [NotificacaoController::class, 'index']);
 
     // Agenda
     Route::get('/agenda/horarios-disponiveis', [AgendaController::class, 'horariosDisponiveis']);
     Route::get('/cep/{cep}', [AgendaController::class, 'cep']);
+
+    // Estoque
+    Route::get('/estoque/produtos', [EstoqueController::class, 'indexProdutos']);
+    Route::post('/estoque/produtos', [EstoqueController::class, 'storeProduto']);
+    Route::get('/estoque/produtos/{id}', [EstoqueController::class, 'showProduto']);
+    Route::put('/estoque/produtos/{id}', [EstoqueController::class, 'updateProduto']);
+    Route::patch('/estoque/produtos/{id}/toggle-ativo', [EstoqueController::class, 'toggleAtivo']);
+    Route::delete('/estoque/produtos/{id}', [EstoqueController::class, 'destroyProduto']);
+    Route::get('/estoque/movimentacoes', [EstoqueController::class, 'indexMovimentacoes']);
+    Route::post('/estoque/movimentacoes', [EstoqueController::class, 'storeMovimentacao']);
+    Route::get('/estoque/relatorio', [EstoqueController::class, 'relatorio']);
+    Route::get('/estoque/categorias', [EstoqueController::class, 'categorias']);
 });

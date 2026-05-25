@@ -18,12 +18,10 @@ class AgendaController extends Controller
             'ignorar_consulta' => ['nullable', 'integer'],
         ]);
 
-        $userId  = $request->user()->id;
         $data    = Carbon::parse($request->data);
         $duracao = (int) $request->duracao_minutos;
 
-        $consultasDia = Consulta::where('user_id', $userId)
-            ->whereDate('inicio', $data)
+        $consultasDia = Consulta::whereDate('inicio', $data)
             ->whereNotIn('status', ['cancelada', 'nao_compareceu'])
             ->when($request->ignorar_consulta, fn ($q, $id) => $q->where('id', '!=', $id))
             ->orderBy('inicio')

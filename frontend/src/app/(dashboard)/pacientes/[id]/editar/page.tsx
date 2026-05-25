@@ -63,11 +63,12 @@ export default function EditarPacientePage({ params }: { params: Promise<{ id: s
       <div className="rounded-2xl border border-border bg-card p-6">
         <PacienteForm
           defaultValues={{
-            nome_completo: paciente.nome_completo,
-            cpf: paciente.cpf ?? '',
-            data_nascimento: paciente.data_nascimento ?? '',
-            telefone: paciente.telefone ?? '',
-            email: paciente.email ?? '',
+            nome_completo:      paciente.nome_completo,
+            cpf:                paciente.cpf ?? '',
+            data_nascimento:    paciente.data_nascimento ?? '',
+            telefone:           paciente.telefone ?? '',
+            email:              paciente.email ?? '',
+            endereco:           paciente.endereco ?? {},
             observacoes_gerais: paciente.observacoes_gerais ?? '',
             consentimento_aceito: true,
           }}

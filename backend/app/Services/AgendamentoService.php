@@ -12,7 +12,6 @@ class AgendamentoService
     public function verificarConflito(int $userId, Carbon $inicio, Carbon $fim, ?int $ignorarConsultaId = null): bool
     {
         return Consulta::query()
-            ->where('user_id', $userId)
             ->whereNotIn('status', ['cancelada', 'nao_compareceu'])
             ->when($ignorarConsultaId, fn ($q) => $q->where('id', '!=', $ignorarConsultaId))
             ->where(function ($q) use ($inicio, $fim) {
@@ -34,14 +33,15 @@ class AgendamentoService
             ]);
         }
 
-        return \DB::transaction(function () use ($dados, $userId, $inicio, $fim) {
-            $procedimentos = Procedimento::whereIn('id', $dados['procedimentos'])
-                ->where('user_id', $userId)
-                ->get();
+        $clinicaId = auth()->user()->clinica_id;
+
+        return \DB::transaction(function () use ($dados, $userId, $clinicaId, $inicio, $fim) {
+            $procedimentos = Procedimento::whereIn('id', $dados['procedimentos'])->get();
 
             $valorTotal = $procedimentos->sum('preco');
 
             $consulta = Consulta::create([
+                'clinica_id'                => $clinicaId,
                 'user_id'                   => $userId,
                 'paciente_id'               => $dados['paciente_id'],
                 'inicio'                    => $inicio,

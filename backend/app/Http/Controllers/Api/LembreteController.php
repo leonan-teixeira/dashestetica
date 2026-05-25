@@ -20,7 +20,6 @@ class LembreteController extends Controller
     {
         $lembretes = Lembrete::query()
             ->with('paciente:id,nome_completo')
-            ->whereHas('paciente', fn ($q) => $q->where('user_id', $request->user()->id))
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
             ->when($request->paciente_id, fn ($q, $id) => $q->where('paciente_id', $id))
             ->orderByDesc('agendado_para')
@@ -40,7 +39,10 @@ class LembreteController extends Controller
             'mensagem'      => ['required', 'string'],
         ]);
 
-        $lembrete = Lembrete::create($request->validated());
+        $lembrete = Lembrete::create(array_merge(
+            $request->validated(),
+            ['clinica_id' => $request->user()->clinica_id]
+        ));
 
         return response()->json(['data' => new LembreteResource($lembrete)], 201);
     }
@@ -48,7 +50,7 @@ class LembreteController extends Controller
     public function destroy(Request $request, Lembrete $lembrete): JsonResponse
     {
         abort_if(
-            $lembrete->paciente->user_id !== $request->user()->id,
+            $lembrete->clinica_id !== $request->user()->clinica_id,
             403
         );
 
@@ -60,7 +62,7 @@ class LembreteController extends Controller
     public function reenviar(Request $request, Lembrete $lembrete): JsonResponse
     {
         abort_if(
-            $lembrete->paciente->user_id !== $request->user()->id,
+            $lembrete->clinica_id !== $request->user()->clinica_id,
             403
         );
 

@@ -22,7 +22,6 @@ class ConsultaController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $consultas = Consulta::query()
-            ->where('user_id', $request->user()->id)
             ->when($request->paciente_id, fn ($q, $id) => $q->where('paciente_id', $id))
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
             ->when($request->data_inicio, fn ($q, $d) => $q->whereDate('inicio', '>=', $d))
@@ -46,7 +45,7 @@ class ConsultaController extends Controller
 
     public function show(Request $request, Consulta $consulta): JsonResponse
     {
-        abort_if($consulta->user_id !== $request->user()->id, 403);
+        abort_if($consulta->clinica_id !== $request->user()->clinica_id, 403);
 
         $consulta->load(['paciente', 'procedimentos', 'fotos']);
 
@@ -55,7 +54,7 @@ class ConsultaController extends Controller
 
     public function update(UpdateConsultaRequest $request, Consulta $consulta): JsonResponse
     {
-        abort_if($consulta->user_id !== $request->user()->id, 403);
+        abort_if($consulta->clinica_id !== $request->user()->clinica_id, 403);
 
         $data = $request->validated();
 
@@ -70,7 +69,6 @@ class ConsultaController extends Controller
 
         if (isset($data['procedimentos'])) {
             $procedimentos = Procedimento::whereIn('id', $data['procedimentos'])
-                ->where('user_id', $request->user()->id)
                 ->get()
                 ->mapWithKeys(fn ($p) => [$p->id => ['preco_aplicado' => $p->preco, 'duracao_aplicada' => $p->duracao_minutos]]);
 
@@ -85,7 +83,7 @@ class ConsultaController extends Controller
 
     public function destroy(Request $request, Consulta $consulta): JsonResponse
     {
-        abort_if($consulta->user_id !== $request->user()->id, 403);
+        abort_if($consulta->clinica_id !== $request->user()->clinica_id, 403);
 
         $consulta->delete();
 
@@ -94,7 +92,7 @@ class ConsultaController extends Controller
 
     public function updateStatus(UpdateStatusRequest $request, Consulta $consulta): JsonResponse
     {
-        abort_if($consulta->user_id !== $request->user()->id, 403);
+        abort_if($consulta->clinica_id !== $request->user()->clinica_id, 403);
 
         $consulta->update(['status' => $request->status]);
 
@@ -103,7 +101,7 @@ class ConsultaController extends Controller
 
     public function updateEvolucao(Request $request, Consulta $consulta): JsonResponse
     {
-        abort_if($consulta->user_id !== $request->user()->id, 403);
+        abort_if($consulta->clinica_id !== $request->user()->clinica_id, 403);
 
         $request->validate([
             'evolucao_clinica'          => ['required', 'string'],

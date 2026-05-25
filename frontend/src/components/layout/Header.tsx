@@ -1,15 +1,17 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Bell, Search, Moon, Sun } from 'lucide-react';
+import { Search, Moon, Sun } from 'lucide-react';
 import { useThemeStore } from '@/stores/themeStore';
+import { NotificationDropdown } from './NotificationDropdown';
 
 const titles: Record<string, { title: string; subtitle: string }> = {
-  '/dashboard': { title: 'Dashboard', subtitle: 'Visão geral do seu studio' },
-  '/pacientes': { title: 'Pacientes', subtitle: 'Gerencie seu cadastro de pacientes' },
-  '/agenda': { title: 'Agenda', subtitle: 'Próximas consultas e horários' },
+  '/dashboard':     { title: 'Dashboard',     subtitle: 'Visão geral do seu studio' },
+  '/pacientes':     { title: 'Pacientes',     subtitle: 'Gerencie seu cadastro de pacientes' },
+  '/agenda':        { title: 'Agenda',        subtitle: 'Próximas consultas e horários' },
   '/procedimentos': { title: 'Procedimentos', subtitle: 'Catálogo de serviços oferecidos' },
-  '/consultas': { title: 'Consultas', subtitle: 'Histórico e filtros de atendimentos' },
+  '/consultas':     { title: 'Consultas',     subtitle: 'Histórico e filtros de atendimentos' },
+  '/estoque':        { title: 'Estoque',        subtitle: 'Controle de produtos e movimentações' },
   '/configuracoes': { title: 'Configurações', subtitle: 'Conta, segurança e integrações' },
 };
 
@@ -45,13 +47,7 @@ export function Header() {
         >
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
-        <button
-          className="relative flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          title="Notificações"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-destructive" />
-        </button>
+        <NotificationDropdown />
       </div>
     </header>
   );

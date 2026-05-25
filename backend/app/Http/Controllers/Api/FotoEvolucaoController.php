@@ -17,13 +17,14 @@ class FotoEvolucaoController extends Controller
 {
     public function store(StoreFotoRequest $request, Consulta $consulta): JsonResponse
     {
-        abort_if($consulta->user_id !== $request->user()->id, 403);
+        abort_if($consulta->clinica_id !== $request->user()->clinica_id, 403);
 
         $fotos = [];
         foreach ($request->file('fotos') as $file) {
             $path = $file->store("pacientes/{$consulta->paciente_id}/consultas/{$consulta->id}", 'local');
 
             $fotos[] = FotoEvolucao::create([
+                'clinica_id'    => $request->user()->clinica_id,
                 'paciente_id'   => $consulta->paciente_id,
                 'consulta_id'   => $consulta->id,
                 'tipo'          => $request->tipo,
@@ -42,7 +43,7 @@ class FotoEvolucaoController extends Controller
 
     public function porPaciente(Request $request, Paciente $paciente): AnonymousResourceCollection
     {
-        abort_if($paciente->user_id !== $request->user()->id, 403);
+        abort_if($paciente->clinica_id !== $request->user()->clinica_id, 403);
 
         $fotos = FotoEvolucao::where('paciente_id', $paciente->id)
             ->when($request->tipo, fn ($q, $t) => $q->where('tipo', $t))
@@ -55,7 +56,7 @@ class FotoEvolucaoController extends Controller
 
     public function comparativo(Request $request, Consulta $consulta): JsonResponse
     {
-        abort_if($consulta->user_id !== $request->user()->id, 403);
+        abort_if($consulta->clinica_id !== $request->user()->clinica_id, 403);
 
         $fotos = $consulta->fotos()->orderBy('tipo')->get();
 
@@ -64,22 +65,20 @@ class FotoEvolucaoController extends Controller
 
     public function stream(Request $request, FotoEvolucao $foto): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        $consulta = $foto->consulta;
-        abort_if($consulta->user_id !== $request->user()->id, 403);
+        abort_if($foto->clinica_id !== $request->user()->clinica_id, 403);
 
         $disk = Storage::disk($foto->disk);
         abort_unless($disk->exists($foto->path), 404);
 
         return $disk->response($foto->path, null, [
-            'Content-Type' => $foto->mime ?? 'image/jpeg',
+            'Content-Type'  => $foto->mime ?? 'image/jpeg',
             'Cache-Control' => 'private, max-age=3600',
         ]);
     }
 
     public function destroy(Request $request, FotoEvolucao $foto): JsonResponse
     {
-        $consulta = $foto->consulta;
-        abort_if($consulta->user_id !== $request->user()->id, 403);
+        abort_if($foto->clinica_id !== $request->user()->clinica_id, 403);
 
         Storage::disk($foto->disk)->delete($foto->path);
         $foto->delete();

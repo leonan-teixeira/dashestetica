@@ -7,13 +7,22 @@ function setAuthedCookie() {
 
 function clearAuthedCookie() {
   document.cookie = 'app_authed=; path=/; max-age=0';
+  document.cookie = 'app_admin=; path=/; max-age=0';
+}
+
+function setAdminCookie() {
+  document.cookie = 'app_admin=1; path=/; SameSite=Lax; max-age=604800';
 }
 
 export async function login(email: string, password: string): Promise<User> {
   await ensureCsrfCookie();
   const { data } = await api.post('/api/login', { email, password });
+  const user: User = data.data;
   setAuthedCookie();
-  return data.data;
+  if (user.is_super_admin) {
+    setAdminCookie();
+  }
+  return user;
 }
 
 export async function logout(): Promise<void> {

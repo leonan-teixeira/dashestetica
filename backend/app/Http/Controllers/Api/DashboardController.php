@@ -15,29 +15,25 @@ class DashboardController extends Controller
 {
     public function resumo(Request $request): JsonResponse
     {
-        $userId = $request->user()->id;
-        $hoje   = Carbon::today();
+        $hoje = Carbon::today();
 
-        $consultasHoje = Consulta::where('user_id', $userId)
-            ->whereDate('inicio', $hoje)
+        $consultasHoje = Consulta::whereDate('inicio', $hoje)
             ->whereNotIn('status', ['cancelada', 'nao_compareceu'])
             ->count();
 
-        $proximasConsultas = Consulta::where('user_id', $userId)
-            ->where('inicio', '>=', now())
+        $proximasConsultas = Consulta::where('inicio', '>=', now())
             ->whereNotIn('status', ['cancelada', 'nao_compareceu'])
             ->orderBy('inicio')
             ->limit(5)
             ->with('paciente')
             ->get();
 
-        $faturamentoMes = Consulta::where('user_id', $userId)
-            ->whereMonth('inicio', $hoje->month)
+        $faturamentoMes = Consulta::whereMonth('inicio', $hoje->month)
             ->whereYear('inicio', $hoje->year)
             ->where('status', 'realizada')
             ->sum('valor_total');
 
-        $totalPacientes = Paciente::where('user_id', $userId)->count();
+        $totalPacientes = Paciente::count();
 
         return response()->json([
             'data' => [
@@ -51,12 +47,10 @@ class DashboardController extends Controller
 
     public function agendaSemana(Request $request): JsonResponse
     {
-        $userId = $request->user()->id;
         $inicio = Carbon::now()->startOfWeek();
         $fim    = Carbon::now()->endOfWeek();
 
-        $consultas = Consulta::where('user_id', $userId)
-            ->whereBetween('inicio', [$inicio, $fim])
+        $consultas = Consulta::whereBetween('inicio', [$inicio, $fim])
             ->whereNotIn('status', ['cancelada'])
             ->with(['paciente', 'procedimentos'])
             ->orderBy('inicio')
@@ -69,11 +63,9 @@ class DashboardController extends Controller
 
     public function pacientesRetorno(Request $request): JsonResponse
     {
-        $userId = $request->user()->id;
-        $dias   = (int) $request->get('dias', 30);
+        $dias = (int) $request->get('dias', 30);
 
-        $pacientes = Paciente::where('user_id', $userId)
-            ->whereHas('consultas', function ($q) use ($dias) {
+        $pacientes = Paciente::whereHas('consultas', function ($q) use ($dias) {
                 $q->where('status', 'realizada')
                   ->whereNotNull('proxima_recomendacao_dias')
                   ->whereRaw('DATE_ADD(DATE(inicio), INTERVAL proxima_recomendacao_dias DAY) <= ?', [now()->addDays($dias)]);

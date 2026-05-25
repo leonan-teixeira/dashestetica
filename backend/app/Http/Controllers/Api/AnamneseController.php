@@ -13,7 +13,7 @@ class AnamneseController extends Controller
 {
     public function show(Request $request, Paciente $paciente): JsonResponse
     {
-        abort_if($paciente->user_id !== $request->user()->id, 403);
+        abort_if($paciente->clinica_id !== $request->user()->clinica_id, 403);
 
         $anamnese = $paciente->anamnese;
 
@@ -26,12 +26,15 @@ class AnamneseController extends Controller
 
     public function store(StoreAnamneseRequest $request, Paciente $paciente): JsonResponse
     {
-        abort_if($paciente->user_id !== $request->user()->id, 403);
+        abort_if($paciente->clinica_id !== $request->user()->clinica_id, 403);
         abort_if($paciente->anamnese !== null, 409, 'Paciente já possui anamnese.');
 
         $anamnese = $paciente->anamnese()->create(array_merge(
             $request->validated(),
-            ['respondida_em' => now()]
+            [
+                'clinica_id'    => $request->user()->clinica_id,
+                'respondida_em' => now(),
+            ]
         ));
 
         return response()->json(['data' => new AnamneseResource($anamnese)], 201);
@@ -39,7 +42,7 @@ class AnamneseController extends Controller
 
     public function update(StoreAnamneseRequest $request, Paciente $paciente): JsonResponse
     {
-        abort_if($paciente->user_id !== $request->user()->id, 403);
+        abort_if($paciente->clinica_id !== $request->user()->clinica_id, 403);
 
         $anamnese = $paciente->anamnese ?? $paciente->anamnese()->create(['respondida_em' => now()]);
         $anamnese->update($request->validated());

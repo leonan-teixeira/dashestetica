@@ -2,12 +2,19 @@
 
 namespace App\Models;
 
+use App\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Lembrete extends Model
 {
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope());
+    }
+
     protected $fillable = [
+        'clinica_id',
         'consulta_id',
         'paciente_id',
         'tipo',
