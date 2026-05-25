@@ -45,7 +45,7 @@ export function ConsultaForm({
   const { data: pacientes } = useQuery({
     queryKey: ['pacientes-busca', pacienteSearch],
     queryFn: async () => {
-      const { data } = await api.get<{ data: Paciente[] }>('/api/pacientes', {
+      const { data } = await api.get<{ data: Paciente[] }>('/pacientes', {
         params: { search: pacienteSearch || undefined, per_page: 10 },
       });
       return data.data;
@@ -56,7 +56,7 @@ export function ConsultaForm({
   const { data: procedimentos } = useQuery({
     queryKey: ['procedimentos'],
     queryFn: async () => {
-      const { data } = await api.get<{ data: Procedimento[] }>('/api/procedimentos');
+      const { data } = await api.get<{ data: Procedimento[] }>('/procedimentos');
       return data.data;
     },
   });

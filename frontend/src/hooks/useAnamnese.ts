@@ -8,7 +8,7 @@ export function useAnamnese(pacienteId: number) {
   return useQuery({
     queryKey: ['anamnese', pacienteId],
     queryFn: async () => {
-      const { data } = await api.get<{ data: Anamnese }>(`/api/pacientes/${pacienteId}/anamnese`);
+      const { data } = await api.get<{ data: Anamnese }>(`/pacientes/${pacienteId}/anamnese`);
       return data.data;
     },
     enabled: !!pacienteId,
@@ -20,7 +20,7 @@ export function useSalvarAnamnese(pacienteId: number) {
   return useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
       const { data } = await api.post<{ data: Anamnese }>(
-        `/api/pacientes/${pacienteId}/anamnese`,
+        `/pacientes/${pacienteId}/anamnese`,
         payload
       );
       return data.data;

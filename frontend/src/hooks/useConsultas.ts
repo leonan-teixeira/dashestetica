@@ -17,7 +17,7 @@ export function useConsultas(params: ConsultaParams = {}) {
   return useQuery({
     queryKey: ['consultas', params],
     queryFn: async () => {
-      const { data } = await api.get<PaginatedResponse<Consulta>>('/api/consultas', { params });
+      const { data } = await api.get<PaginatedResponse<Consulta>>('/consultas', { params });
       return data;
     },
   });
@@ -27,7 +27,7 @@ export function useConsulta(id: number) {
   return useQuery({
     queryKey: ['consulta', id],
     queryFn: async () => {
-      const { data } = await api.get<{ data: Consulta }>(`/api/consultas/${id}`);
+      const { data } = await api.get<{ data: Consulta }>(`/consultas/${id}`);
       return data.data;
     },
     enabled: !!id,
@@ -38,7 +38,7 @@ export function useCriarConsulta() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
-      const { data } = await api.post<{ data: Consulta }>('/api/consultas', payload);
+      const { data } = await api.post<{ data: Consulta }>('/consultas', payload);
       return data.data;
     },
     onSuccess: () => {
@@ -52,7 +52,7 @@ export function useAtualizarStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const { data } = await api.patch<{ data: Consulta }>(`/api/consultas/${id}/status`, { status });
+      const { data } = await api.patch<{ data: Consulta }>(`/consultas/${id}/status`, { status });
       return data.data;
     },
     onSuccess: (_, { id }) => {

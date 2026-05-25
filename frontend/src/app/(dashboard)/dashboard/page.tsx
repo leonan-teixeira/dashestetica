@@ -47,7 +47,7 @@ export default function DashboardPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard-resumo'],
     queryFn: async () => {
-      const { data } = await api.get<{ data: Resumo }>('/api/dashboard/resumo');
+      const { data } = await api.get<{ data: Resumo }>('/dashboard/resumo');
       return data.data;
     },
   });
@@ -55,7 +55,7 @@ export default function DashboardPage() {
   const { data: graficos } = useQuery({
     queryKey: ['dashboard-graficos'],
     queryFn: async () => {
-      const { data } = await api.get<{ data: Graficos }>('/api/dashboard/graficos');
+      const { data } = await api.get<{ data: Graficos }>('/dashboard/graficos');
       return data.data;
     },
   });

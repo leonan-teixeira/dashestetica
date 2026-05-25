@@ -39,7 +39,7 @@ export function NotificationDropdown() {
   const { data, refetch } = useQuery({
     queryKey: ['notificacoes'],
     queryFn: async () => {
-      const { data } = await api.get<{ data: Notificacao[]; total: number }>('/api/notificacoes');
+      const { data } = await api.get<{ data: Notificacao[]; total: number }>('/notificacoes');
       return data;
     },
     refetchInterval: 60_000,
