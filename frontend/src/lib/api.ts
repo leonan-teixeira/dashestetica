@@ -32,7 +32,7 @@ api.interceptors.response.use(
     }
 
     if (status === 419) {
-      await api.get('/sanctum/csrf-cookie');
+      await ensureCsrfCookie();
     }
 
     return Promise.reject(err);
@@ -40,5 +40,6 @@ api.interceptors.response.use(
 );
 
 export async function ensureCsrfCookie(): Promise<void> {
-  await api.get('/sanctum/csrf-cookie');
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/api$/, '');
+  await api.get(`${base}/sanctum/csrf-cookie`);
 }
