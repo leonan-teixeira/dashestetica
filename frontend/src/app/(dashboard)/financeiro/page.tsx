@@ -30,7 +30,10 @@ import {
   marcarPago,
   getExportUrl,
 } from '@/lib/financeiroApi';
-import type { FinanceiroResumo, ExtratoItem, ExtratoMeta, FaturamentoMensal } from '@/types/api';
+import type { FinanceiroResumo, ExtratoItem, ExtratoMeta, FaturamentoMensal, ContaPagar, ContasPagarResumo } from '@/types/api';
+import { getResumoContas, listContas, desfazerPagamento, deleteConta } from '@/lib/contasPagarApi';
+import { ContaPagarModal } from '@/components/financeiro/ContaPagarModal';
+import { PagarModal } from '@/components/financeiro/PagarModal';
 import { cn } from '@/lib/utils';
 
 const fmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -99,7 +102,7 @@ function StatCard({
   );
 }
 
-type Tab = 'visao-geral' | 'extrato' | 'contas-receber';
+type Tab = 'visao-geral' | 'extrato' | 'contas-receber' | 'contas-pagar';
 
 export default function FinanceiroPage() {
   const [tab, setTab] = useState<Tab>('visao-geral');
@@ -117,8 +120,18 @@ export default function FinanceiroPage() {
   const [mensal, setMensal]         = useState<FaturamentoMensal[]>([]);
   const [extrato, setExtrato]       = useState<ExtratoItem[]>([]);
   const [meta, setMeta]             = useState<ExtratoMeta | null>(null);
-  const [loadingResumo, setLoadingResumo] = useState(true);
+  const [loadingResumo, setLoadingResumo]   = useState(true);
   const [loadingExtrato, setLoadingExtrato] = useState(false);
+
+  // Contas a pagar
+  const [resumoContas, setResumoContas]     = useState<ContasPagarResumo | null>(null);
+  const [contas, setContas]                 = useState<ContaPagar[]>([]);
+  const [metaContas, setMetaContas]         = useState<Record<string, number> | null>(null);
+  const [loadingContas, setLoadingContas]   = useState(false);
+  const [filtroStatusContas, setFiltroStatusContas] = useState('');
+  const [pageContas, setPageContas]         = useState(1);
+  const [contaModal, setContaModal]         = useState<{ open: boolean; conta?: ContaPagar }>({ open: false });
+  const [pagarModal, setPagarModal]         = useState<{ open: boolean; conta?: ContaPagar }>({ open: false });
 
   const params = {
     data_inicio:     dataInicio,
@@ -154,13 +167,31 @@ export default function FinanceiroPage() {
     }
   }, [dataInicio, dataFim, filtroForma, filtroPago, busca, page]); // eslint-disable-line
 
+  const carregarContas = useCallback(async () => {
+    setLoadingContas(true);
+    try {
+      const [res, res2] = await Promise.all([
+        listContas({ status: filtroStatusContas || undefined, page: pageContas }),
+        getResumoContas(),
+      ]);
+      setContas(res.data);
+      setMetaContas(res.meta);
+      setResumoContas(res2);
+    } finally {
+      setLoadingContas(false);
+    }
+  }, [filtroStatusContas, pageContas]);
+
   useEffect(() => { carregarResumo(); }, [carregarResumo]);
 
   useEffect(() => {
     if (tab === 'extrato' || tab === 'contas-receber') {
       carregarExtrato();
     }
-  }, [tab, carregarExtrato]);
+    if (tab === 'contas-pagar') {
+      carregarContas();
+    }
+  }, [tab, carregarExtrato, carregarContas]);
 
   async function handleMarcarPago(item: ExtratoItem, pago: boolean) {
     await marcarPago(item.id, { pago, forma_pagamento: item.forma_pagamento });
@@ -225,6 +256,7 @@ export default function FinanceiroPage() {
           { key: 'visao-geral',    label: 'Visão Geral' },
           { key: 'extrato',        label: 'Extrato' },
           { key: 'contas-receber', label: `Contas a Receber${resumo ? ` (${resumo.qtd_pendente_geral})` : ''}` },
+          { key: 'contas-pagar',  label: `Contas a Pagar${resumoContas?.qtd_vencido ? ` ⚠ ${resumoContas.qtd_vencido}` : ''}` },
         ] as { key: Tab; label: string }[]).map(({ key, label }) => (
           <button
             key={key}
@@ -320,6 +352,152 @@ export default function FinanceiroPage() {
               )}
             </>
           ) : null}
+        </div>
+      )}
+
+      {/* ── Contas a pagar ───────────────────────────────────────────────── */}
+      {tab === 'contas-pagar' && (
+        <div className="space-y-4">
+          {/* Cards resumo */}
+          {resumoContas && (
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatCard icon={Clock}       label="Pendente"       value={fmt.format(resumoContas.total_pendente)} accent="yellow" />
+              <StatCard icon={AlertCircle} label="Vencido"        value={fmt.format(resumoContas.total_vencido)}  accent={resumoContas.total_vencido > 0 ? 'red' : 'green'} />
+              <StatCard icon={CheckCircle} label="Pago este mês"  value={fmt.format(resumoContas.total_pago_mes)} accent="green" />
+              <StatCard icon={TrendingDown} label="Vencem em 7 dias" value={String(resumoContas.proximas_7dias.length)} accent="blue" />
+            </div>
+          )}
+
+          {/* Alertas próximos 7 dias */}
+          {resumoContas && resumoContas.proximas_7dias.length > 0 && (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+              <p className="text-xs font-semibold text-amber-600 mb-2">Vencem nos próximos 7 dias</p>
+              <div className="space-y-1">
+                {resumoContas.proximas_7dias.map((c) => (
+                  <div key={c.id} className="flex items-center justify-between text-sm">
+                    <span className="text-foreground">{c.descricao}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground">{new Date(c.data_vencimento).toLocaleDateString('pt-BR')}</span>
+                      <span className="font-semibold text-foreground">{fmt.format(c.valor)}</span>
+                      <button onClick={() => setPagarModal({ open: true, conta: c })} className="rounded-lg bg-amber-500 px-2 py-0.5 text-xs font-medium text-white hover:bg-amber-600">Pagar</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Header + filtros */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex gap-1 rounded-xl border border-border overflow-hidden">
+              {[
+                { v: '',        l: 'Todas' },
+                { v: 'pendente', l: 'Pendente' },
+                { v: 'vencido',  l: 'Vencido' },
+                { v: 'pago',     l: 'Pago' },
+              ].map(({ v, l }) => (
+                <button
+                  key={v}
+                  onClick={() => { setFiltroStatusContas(v); setPageContas(1); }}
+                  className={cn(
+                    'px-3 py-1.5 text-xs font-medium transition-colors',
+                    filtroStatusContas === v ? 'bg-brand-500 text-white' : 'text-muted-foreground hover:bg-muted'
+                  )}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setContaModal({ open: true })} className="btn-primary flex items-center gap-2 text-sm">
+              + Nova Conta
+            </button>
+          </div>
+
+          {/* Tabela */}
+          <div className="card overflow-hidden">
+            {loadingContas ? (
+              <div className="flex items-center justify-center py-12 text-muted-foreground">
+                <RefreshCw className="h-5 w-5 animate-spin mr-2" /> Carregando...
+              </div>
+            ) : contas.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground text-sm">
+                Nenhuma conta encontrada.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Descrição</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden sm:table-cell">Fornecedor</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vencimento</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Valor</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {contas.map((c) => (
+                      <tr key={c.id} className="hover:bg-muted/40 transition-colors">
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-foreground">{c.descricao}</p>
+                          {c.categoria && <p className="text-xs text-muted-foreground">{c.categoria}</p>}
+                          {c.recorrente && <span className="text-[10px] text-brand-500">↺ {c.recorrencia}</span>}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{c.fornecedor ?? '—'}</td>
+                        <td className="px-4 py-3 text-center text-muted-foreground whitespace-nowrap">
+                          {new Date(c.data_vencimento).toLocaleDateString('pt-BR')}
+                          {c.data_pagamento && (
+                            <p className="text-[10px] text-emerald-500">Pago {new Date(c.data_pagamento).toLocaleDateString('pt-BR')}</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold text-foreground">{fmt.format(c.valor)}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={cn(
+                            'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                            c.status === 'pago'    && 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+                            c.status === 'vencido' && 'bg-red-500/15 text-red-500',
+                            c.status === 'pendente'&& 'bg-amber-500/15 text-amber-600',
+                          )}>
+                            {c.status === 'pago' ? 'Pago' : c.status === 'vencido' ? 'Vencido' : 'Pendente'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end gap-1">
+                            {c.status !== 'pago' && (
+                              <button onClick={() => setPagarModal({ open: true, conta: c })} className="rounded-lg px-2 py-1 text-xs font-medium bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors">
+                                Pagar
+                              </button>
+                            )}
+                            {c.status === 'pago' && (
+                              <button onClick={async () => { await desfazerPagamento(c.id); carregarContas(); }} className="rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">
+                                Desfazer
+                              </button>
+                            )}
+                            <button onClick={() => setContaModal({ open: true, conta: c })} className="rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">
+                              Editar
+                            </button>
+                            <button onClick={async () => { if (confirm('Remover esta conta?')) { await deleteConta(c.id); carregarContas(); } }} className="rounded-lg px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors">
+                              Excluir
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Paginação */}
+          {metaContas && (metaContas.last_page ?? 1) > 1 && (
+            <div className="flex items-center justify-center gap-3">
+              <button onClick={() => setPageContas((p) => Math.max(1, p - 1))} disabled={pageContas === 1} className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-40">Anterior</button>
+              <span className="text-sm text-muted-foreground">{pageContas} / {metaContas.last_page}</span>
+              <button onClick={() => setPageContas((p) => Math.min(metaContas.last_page, p + 1))} disabled={pageContas === metaContas.last_page} className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-40">Próxima</button>
+            </div>
+          )}
         </div>
       )}
 
@@ -481,6 +659,20 @@ export default function FinanceiroPage() {
           )}
         </div>
       )}
+
+      <ContaPagarModal
+        open={contaModal.open}
+        conta={contaModal.conta}
+        onClose={() => setContaModal({ open: false })}
+        onSaved={() => { setContaModal({ open: false }); carregarContas(); }}
+      />
+
+      <PagarModal
+        open={pagarModal.open}
+        conta={pagarModal.conta}
+        onClose={() => setPagarModal({ open: false })}
+        onSaved={() => { setPagarModal({ open: false }); carregarContas(); }}
+      />
     </div>
   );
 }

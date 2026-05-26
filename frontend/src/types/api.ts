@@ -133,6 +133,30 @@ export interface FaturamentoMensal {
   consultas: number;
 }
 
+export interface ContaPagar {
+  id: number;
+  descricao: string;
+  fornecedor: string | null;
+  categoria: string | null;
+  valor: number;
+  data_vencimento: string;
+  data_pagamento: string | null;
+  status: 'pendente' | 'pago' | 'vencido';
+  forma_pagamento: string | null;
+  observacao: string | null;
+  recorrente: boolean;
+  recorrencia: 'semanal' | 'mensal' | 'anual' | null;
+  created_at: string;
+}
+
+export interface ContasPagarResumo {
+  total_pendente: number;
+  total_vencido: number;
+  total_pago_mes: number;
+  qtd_vencido: number;
+  proximas_7dias: ContaPagar[];
+}
+
 export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;

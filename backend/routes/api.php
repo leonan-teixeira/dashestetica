@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\AgendaController;
 use App\Http\Controllers\Api\AuditController;
 use App\Http\Controllers\Api\GraficoController;
+use App\Http\Controllers\Api\ContasPagarController;
 use App\Http\Controllers\Api\EstoqueController;
 use App\Http\Controllers\Api\FinanceiroController;
 use App\Http\Controllers\Api\NotificacaoController;
@@ -93,6 +94,16 @@ Route::middleware(['auth:sanctum', 'throttle:api', SetTenant::class, CheckSubscr
     Route::get('/financeiro/faturamento-mensal', [FinanceiroController::class, 'faturamentoMensal']);
     Route::patch('/financeiro/consultas/{id}/pago', [FinanceiroController::class, 'marcarPago']);
     Route::get('/financeiro/exportar-csv', [FinanceiroController::class, 'exportarCsv']);
+
+    // Contas a pagar
+    Route::get('/contas-pagar/resumo',       [ContasPagarController::class, 'resumo']);
+    Route::get('/contas-pagar/categorias',   [ContasPagarController::class, 'categorias']);
+    Route::get('/contas-pagar',              [ContasPagarController::class, 'index']);
+    Route::post('/contas-pagar',             [ContasPagarController::class, 'store']);
+    Route::put('/contas-pagar/{id}',         [ContasPagarController::class, 'update']);
+    Route::patch('/contas-pagar/{id}/pagar', [ContasPagarController::class, 'pagar']);
+    Route::patch('/contas-pagar/{id}/desfazer-pagamento', [ContasPagarController::class, 'desfazerPagamento']);
+    Route::delete('/contas-pagar/{id}',      [ContasPagarController::class, 'destroy']);
 
     // Estoque
     Route::get('/estoque/produtos', [EstoqueController::class, 'indexProdutos']);
