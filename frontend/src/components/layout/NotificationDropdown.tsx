@@ -56,13 +56,16 @@ export function NotificationDropdown() {
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, []);
 
+  const [verMais, setVerMais] = useState(false);
   const total = data?.total ?? 0;
   const notificacoes = data?.data ?? [];
+  const visiveis = verMais ? notificacoes : notificacoes.slice(0, 5);
+  const temMais = notificacoes.length > 5;
 
   return (
     <div className="relative" ref={ref}>
       <button
-        onClick={() => { setOpen((v) => !v); if (!open) refetch(); }}
+        onClick={() => { setOpen((v) => !v); setVerMais(false); if (!open) refetch(); }}
         className="relative flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         title="Notificações"
       >
@@ -93,7 +96,7 @@ export function NotificationDropdown() {
             </div>
           ) : (
             <div className="max-h-96 overflow-y-auto divide-y divide-border">
-              {notificacoes.map((n, i) => {
+              {visiveis.map((n, i) => {
                 const cfg = tipoConfig[n.tipo];
                 const Icon = cfg.icon;
                 return (
@@ -120,8 +123,16 @@ export function NotificationDropdown() {
           )}
 
           {notificacoes.length > 0 && (
-            <div className="border-t border-border px-4 py-2 text-center">
+            <div className="border-t border-border px-4 py-2 flex items-center justify-between">
               <p className="text-xs text-muted-foreground">{total} notificação{total !== 1 ? 'ões' : ''} ativa{total !== 1 ? 's' : ''}</p>
+              {temMais && (
+                <button
+                  onClick={() => setVerMais((v) => !v)}
+                  className="text-xs font-medium text-brand-500 hover:underline"
+                >
+                  {verMais ? 'Ver menos' : `Ver mais (${notificacoes.length - 5})`}
+                </button>
+              )}
             </div>
           )}
         </div>
