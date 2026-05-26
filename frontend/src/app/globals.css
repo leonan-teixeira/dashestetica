@@ -165,37 +165,115 @@
 
 @layer components {
   .input {
-    @apply w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60
-           focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
-           disabled:cursor-not-allowed disabled:opacity-50
-           transition-colors;
+    display: block;
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1.5px solid oklch(0.82 0.018 330);
+    background-color: oklch(0.985 0.006 330);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--foreground);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+  }
+  .input::placeholder {
+    color: oklch(0.60 0.012 320);
+  }
+  .input:focus {
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--brand-500) 18%, transparent);
+  }
+  .input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .dark .input {
+    border-color: oklch(1 0 0 / 16%);
+    background-color: oklch(0.26 0.020 320);
+  }
+  .dark .input::placeholder {
+    color: oklch(0.55 0.012 320);
+  }
+
+  select.input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2rem;
   }
 
   .label {
-    @apply block text-xs font-medium text-muted-foreground mb-1;
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    margin-bottom: 0.25rem;
   }
 
   .card {
-    @apply rounded-2xl border border-border bg-card shadow-sm;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    background-color: var(--card);
+    box-shadow: 0 1px 3px 0 oklch(0 0 0 / 6%);
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-brand-gradient px-4 py-2 text-sm font-semibold text-white
-           shadow-sm shadow-brand-500/25 transition-opacity hover:opacity-90
-           disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-ring;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background-image: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    box-shadow: 0 1px 6px -1px color-mix(in oklch, var(--brand-500) 35%, transparent);
+    transition: opacity 0.15s;
+    cursor: pointer;
+    border: none;
+    outline: none;
   }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground
-           transition-colors hover:bg-muted
-           disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-ring;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    border: 1.5px solid var(--border);
+    background-color: var(--card);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--foreground);
+    transition: background-color 0.15s;
+    cursor: pointer;
+    outline: none;
   }
+  .btn-secondary:hover { background-color: var(--muted); }
+  .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .btn-destructive {
-    @apply inline-flex items-center justify-center rounded-xl bg-destructive px-4 py-2 text-sm font-semibold text-white
-           transition-opacity hover:opacity-90
-           disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-ring;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background-color: var(--destructive);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    transition: opacity 0.15s;
+    cursor: pointer;
+    border: none;
+    outline: none;
   }
+  .btn-destructive:hover { opacity: 0.88; }
+  .btn-destructive:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
 @layer utilities {
